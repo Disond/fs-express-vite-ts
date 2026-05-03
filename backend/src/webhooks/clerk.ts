@@ -10,6 +10,16 @@ export async function clerkWebhookHandler(req: Request, res: Response) {
     const env = getEnv();
 
     try {
+        // DODAJ OVE LINIJE OVDE:
+        console.log("--- DEBUG WEBHOOK ---");
+        console.log("Stigao zahtev na /webhooks/clerk");
+        console.log(
+            "Webhook Secret (prvih 8 karaktera):",
+            env.CLERK_WEBHOOK_SECRET?.substring(0, 8),
+        );
+        console.log("Method:", req.method);
+        console.log("Headers:", JSON.stringify(req.headers).substring(0, 100)); // samo početak hedera
+        // ----------------------
         if (!env.CLERK_WEBHOOK_SECRET) {
             res.status(503).send("Webhooks secret is not provided");
             return;
@@ -19,6 +29,7 @@ export async function clerkWebhookHandler(req: Request, res: Response) {
             req.body instanceof Buffer
                 ? req.body.toString("utf8")
                 : String(req.body);
+
         const request = new Request("http://internal/webhooks/clerk", {
             method: "POST",
             headers: new Headers(req.headers as HeadersInit),
@@ -61,7 +72,7 @@ export async function clerkWebhookHandler(req: Request, res: Response) {
         if (evt.type === "user.deleted") {
             const id = evt.data.id;
             if (id) {
-                await db.delete(users).where(eq(users.id, id));
+                await db.delete(users).where(eq(users.clerkUserId, id));
             }
         }
 
